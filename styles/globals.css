@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand: #3d6ef0;
+  --brand-light: #f0f4ff;
+  --ink-900: #141413;
+  --ink-600: #5c5c58;
+  --ink-200: #d9d9d5;
+  --ink-50: #f8f8f7;
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #ffffff;
+  color: var(--ink-900);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Form elements */
+.input {
+  @apply w-full px-3 py-2.5 text-sm bg-white border border-ink-200 rounded-lg
+    text-ink-900 placeholder-ink-400 transition-all duration-150 outline-none;
+}
+.input:focus {
+  @apply border-brand-500 ring-2 ring-brand-100;
+}
+.input.error {
+  @apply border-red-400 ring-2 ring-red-100;
+}
+
+select.input {
+  @apply cursor-pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%235c5c58' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 10px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 36px;
+  appearance: none;
+}
+
+textarea.input { resize: vertical; min-height: 90px; }
+
+.label {
+  @apply block text-xs font-medium text-ink-600 mb-1.5 tracking-wide uppercase;
+}
+
+.error-msg {
+  @apply text-xs text-red-500 mt-1;
+}
+
+/* Buttons */
+.btn-primary {
+  @apply inline-flex items-center gap-2 px-5 py-2.5 bg-brand-500 text-white text-sm font-medium
+    rounded-lg transition-all duration-150 cursor-pointer border-0 outline-none;
+}
+.btn-primary:hover { @apply bg-brand-600 }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { @apply opacity-50 cursor-not-allowed; }
+
+.btn-secondary {
+  @apply inline-flex items-center gap-2 px-5 py-2.5 bg-white text-ink-800 text-sm font-medium
+    rounded-lg border border-ink-200 transition-all duration-150 cursor-pointer outline-none;
+}
+.btn-secondary:hover { @apply bg-ink-50 border-ink-400; }
+.btn-secondary:active { transform: scale(0.98); }
+
+/* Cards */
+.card {
+  @apply bg-white border border-ink-100 rounded-2xl;
+}
+
+/* Progress steps */
+.step-dot {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300;
+}
+.step-dot.pending { @apply bg-ink-100 text-ink-400; }
+.step-dot.active  { @apply bg-brand-500 text-white shadow-md; }
+.step-dot.done    { @apply bg-brand-100 text-brand-600; }
+
+/* Contract preview */
+.contract-preview {
+  font-family: 'Georgia', serif;
+  font-size: 13px;
+  line-height: 1.9;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid #dce6ff;
+  border-top-color: #3d6ef0;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ink-200); border-radius: 3px; }
+
+/* Toast overrides */
+.toast-success { background: #141413 !important; color: white !important; }

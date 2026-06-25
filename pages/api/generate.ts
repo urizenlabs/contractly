@@ -195,6 +195,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!formData) return res.status(400).json({ error: 'Missing form data' })
 
   //  DEMO MODE: no API key configured 
+console.log("API KEY:", process.env.ANTHROPIC_API_KEY)
   if (!process.env.ANTHROPIC_API_KEY) {
     // Simulate a short generation delay so the UX loading state shows
     await new Promise(r => setTimeout(r, 1800))

@@ -1,45 +1,54 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import Stripe from 'stripe'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
-})
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { plan, formData } = req.body
+  const { plan } = req.body
 
+  // ── DEMO MODE: no Stripe key configured ──────────────────────────────────
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return res.status(200).json({
+      demo: true,
+      url: null,
+      message: 'Demo mode: Stripe not configured. Payment skipped.',
+    })
+  }
+
+  // ── PRODUCTION MODE ───────────────────────────────────────────────────────
+  const Stripe = (await import('stripe')).default
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2024-06-20' as any,
+  })
+
+  const { formData } = req.body
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   try {
     const priceMap: Record<string, number> = {
-      single: 900,  // $9.00
-      pro:    1900, // $19.00
+      single: 900,
+      pro:    1900,
     }
-
     const amount = priceMap[plan] || 900
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: plan === 'pro' ? 'subscription' : 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: plan === 'pro' ? 'Contractly Pro · Contratos ilimitados' : 'Contractly · Un contrato profesional',
-              description: plan === 'pro'
-                ? 'Genera contratos freelance ilimitados con IA cada mes'
-                : 'Un contrato profesional con 13 cláusulas legales + PDF',
-              images: [`${appUrl}/og-product.png`],
-            },
-            unit_amount: amount,
-            ...(plan === 'pro' ? { recurring: { interval: 'month' } } : {}),
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: plan === 'pro'
+              ? 'Contractly Pro · Contratos ilimitados'
+              : 'Contractly · Un contrato profesional',
+            description: plan === 'pro'
+              ? 'Genera contratos freelance ilimitados con IA cada mes'
+              : 'Un contrato profesional con 13 cláusulas legales + PDF',
           },
-          quantity: 1,
+          unit_amount: amount,
+          ...(plan === 'pro' ? { recurring: { interval: 'month' } } : {}),
         },
-      ],
+        quantity: 1,
+      }],
       metadata: {
         plan,
         freelancerName: formData?.freelancerName || '',

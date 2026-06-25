@@ -82,7 +82,25 @@ export async function generatePDF(contractText: string, data: ContractFormData):
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9.5)
 
-  const lines = contractText.split('\n')
+  // ── Sanitize contract text before rendering ───────────────
+  // ROOT CAUSE OF %P BUG: jsPDF standard fonts (Helvetica) only support
+  // WinAnsi encoding (latin-1, U+0000–U+00FF). Characters outside this range
+  // — such as ═ (U+2550, box-drawing) — get mis-encoded: U+2550 maps to byte
+  // 0x50 = ASCII 'P', and the encoding error prefix produces literal '%P' in
+  // the rendered PDF. Fix: replace every non-latin-1 character before rendering.
+  function sanitizeForPDF(text: string): string {
+    return text
+      // Box-drawing separators used in demo template → plain dashes
+      .replace(/[═━─]+/g, '-'.repeat(60))
+      // Any remaining non-latin-1 character → strip
+      .replace(/[^\x00-\xFF]/g, '')
+      // Strip leading duplicate title block (demo template includes it)
+      .replace(/^CONTRATO DE SERVICIOS PROFESIONALES[^\n]*\n(\[MODO DEMO[^\]]*\]\n)?(Fecha:[^\n]*\n)?/, '')
+      // Strip [MODO DEMO ...] line wherever it appears
+      .replace(/^\[MODO DEMO[^\]]*\]\s*\n?/m, '')
+  }
+
+  const lines = sanitizeForPDF(contractText).split('\n')
 
   for (const rawLine of lines) {
     const line = rawLine.trim()
@@ -108,6 +126,16 @@ export async function generatePDF(contractText: string, data: ContractFormData):
       continue
     }
 
+    // Separator lines (===... or ---...) → elegant thin rule instead of text
+    if (/^[=\-]{10,}$/.test(line)) {
+      yPos += 3
+      doc.setDrawColor(217, 217, 213)
+      doc.setLineWidth(0.3)
+      doc.line(marginLeft, yPos, pageWidth - marginRight, yPos)
+      yPos += 5
+      continue
+    }
+
     // Section headers (e.g. "1. TÍTULO")
     const isHeader = /^\d+[\.\-]/.test(line) || /^[A-ZÁÉÍÓÚÑ\s]{8,}$/.test(line)
 
@@ -128,49 +156,6 @@ export async function generatePDF(contractText: string, data: ContractFormData):
       yPos += wrapped.length * lineHeight
     }
   }
-
-  // ── Signature block ──────────────────────────────────────
-  if (yPos > pageHeight - 60) {
-    doc.addPage()
-    yPos = marginTop
-  }
-
-  yPos += 15
-  doc.setDrawColor(217, 217, 213)
-  doc.setLineWidth(0.3)
-  doc.line(marginLeft, yPos, pageWidth - marginRight, yPos)
-  yPos += 6
-
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(10)
-  doc.setTextColor(20, 20, 19)
-  doc.text('FIRMAS', pageWidth / 2, yPos, { align: 'center' })
-  yPos += 12
-
-  const colLeft = marginLeft
-  const colRight = pageWidth / 2 + 10
-  const colWidth = usableWidth / 2 - 8
-
-  // Signature lines
-  doc.setDrawColor(92, 92, 88)
-  doc.setLineWidth(0.5)
-  doc.line(colLeft, yPos + 18, colLeft + colWidth, yPos + 18)
-  doc.line(colRight, yPos + 18, colRight + colWidth, yPos + 18)
-
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(92, 92, 88)
-  doc.text(data.freelancerName, colLeft, yPos + 23)
-  doc.text(data.freelancerRole, colLeft, yPos + 28)
-  doc.text('Prestador de servicios', colLeft, yPos + 33)
-
-  doc.text(data.clientName, colRight, yPos + 23)
-  if (data.clientCompany) doc.text(data.clientCompany, colRight, yPos + 28)
-  doc.text('Cliente', colRight, yPos + (data.clientCompany ? 33 : 28))
-
-  // Date fields
-  doc.text('Firma: _______________   Fecha: ___________', colLeft, yPos + 40)
-  doc.text('Firma: _______________   Fecha: ___________', colRight, yPos + 40)
 
   // ── Footer ──────────────────────────────────────────────
   const totalPages = (doc.internal as any).getNumberOfPages()

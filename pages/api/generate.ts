@@ -281,7 +281,7 @@ Al final, incluye bloques para firma, nombre completo, cargo y fecha de ambas pa
 
   try {
     const message = await client.messages.create({
-      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-0',
+      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
       max_tokens: 4096,
       messages: [{ role: 'user', content: userPrompt }],
       system: systemPrompt,

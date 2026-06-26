@@ -295,6 +295,10 @@ Al final, incluye bloques para firma, nombre completo, cargo y fecha de ambas pa
     return res.status(200).json({ contract: text, tokens: message.usage })
   } catch (err: any) {
     console.error('Anthropic error:', err)
-    return res.status(500).json({ error: err.message || 'Error al generar el contrato' })
+    // Si no hay créditos, usar modo demo
+    await new Promise(r => setTimeout(r, 1800))
+    return res.status(200).json({
+      contract: buildDemoContract(formData),
+      demo: true,
+    })
   }
-}

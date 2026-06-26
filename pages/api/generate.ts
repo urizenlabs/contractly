@@ -293,12 +293,12 @@ Al final, incluye bloques para firma, nombre completo, cargo y fecha de ambas pa
       .join('')
 
     return res.status(200).json({ contract: text, tokens: message.usage })
-  } catch (err: any) {
+ } catch (err: any) {
     console.error('Anthropic error:', err)
-    // Si no hay créditos, usar modo demo
     await new Promise(r => setTimeout(r, 1800))
     return res.status(200).json({
       contract: buildDemoContract(formData),
       demo: true,
     })
   }
+}

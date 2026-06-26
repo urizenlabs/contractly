@@ -196,7 +196,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   //  DEMO MODE: no API key configured 
 console.log("API KEY:", process.env.ANTHROPIC_API_KEY)
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY.trim() === '') {
     // Simulate a short generation delay so the UX loading state shows
     await new Promise(r => setTimeout(r, 1800))
     return res.status(200).json({
